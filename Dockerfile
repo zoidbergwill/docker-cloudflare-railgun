@@ -1,8 +1,10 @@
-FROM ubuntu:15.04
+FROM debian:jessie-slim
 # cloudflare-railgun 5.0.2
 # docker run --name railgun-memcached -d --restart=always memcached
 # docker run -d --restart=always --name railgun -p 2408:2408 --link railgun-memcached:memcached -e RG_ACT_TOKEN= -e RG_ACT_HOST= -e RG_LOG_LEVEL=1 rungeict/cloudflare-railgun
 
+COPY configs/apt /scripts
+ENV PATH $PATH:/scripts
 
 MAINTAINER Matthew McKenzie <matthew.mckenzie@rungeict.com>
 
@@ -12,16 +14,11 @@ ENV RG_ACT_TOKEN ""
 ENV RG_ACT_HOST ""
 ENV RG_MEMCACHED_SERVERS "memcached:11211"
 
-RUN apt-get update && \
-  apt-get install -y curl && \
-  echo 'deb http://pkg.cloudflare.com/ vivid main' | tee /etc/apt/sources.list.d/cloudflare-main.list && \
+RUN apt-get-install.sh ca-certificates curl && \
+  echo 'deb http://pkg.cloudflare.com/ jessie main' | tee /etc/apt/sources.list.d/cloudflare-main.list && \
   curl -C - https://pkg.cloudflare.com/pubkey.gpg | apt-key add - && \
-  apt-get update && \
-  apt-get install -y railgun-stable && \
-  apt-get purge curl -y && \
-  apt-get autoremove -y &&  \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
+  apt-get-purge.sh curl && \
+  apt-get-install.sh railgun-stable
 
 COPY resources/ /
 
